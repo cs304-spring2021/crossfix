@@ -9,7 +9,8 @@ We provide a tool for facilitating such a scenario that search similar issue in 
 
 1. Create query task by requesting http://lab3.sustech.pub/crossfix with issue URL and email. The result will be sent to the email.
 2. (Optional) Check query status by requesting http://lab3.sustech.pub/result .
-3. Evaluate result CSV in the email.
+3. Download CSV from http://lab3.sustech.pub/download or email attachment.
+4. Evaluate result CSV in the email.
 
 If you using Linux or Mac, sending request by cURL is easier. If you are not familiar with cURL, you can use Python package `requests` to send requests.
 
@@ -130,6 +131,50 @@ Status: 200 OK
 }
 ```
 
+## Download result CSV: http://lab3.sustech.pub/download
+
+Input:
+
+- `job_id`: job ID
+
+Output:
+- CSV file, which will be sent to the email if successfully finished.
+
+### Code samples
+
+Shell
+
+```bash
+curl -O -J "http://lab3.sustech.pub:5000/download?job_id=b95b94c8688d11eb9eec20040ff1241c"
+```
+
+Python3
+
+```python
+import requests, re
+payload = {'job_id': 'b95b94c8688d11eb9eec20040ff1241c'}
+r = requests.get("http://lab3.sustech.pub:5000/download", params=payload)
+disposition = r.headers['Content-Disposition']
+fname = re.findall("filename=(.+)", disposition)[0]
+with open(fname, 'w', encoding='utf-8') as _f:
+    print(r.text, file=_f)
+print(r.status_code)
+```
+
+### Sample responses
+
+Status: 400 Bad Request
+
+```
+Bad Request: missing job_id or bad job_id
+```
+
+```
+Bad Request: No file
+```
+
+Status: 200 OK **Transfer the CSV file**
+
 ## Evaluate result CSV in the email
 
 The result will be sent to the email. There are three columns in the result CSV.
@@ -143,4 +188,3 @@ You will need to check
 1. whether `close_url` in the third column can help fix the problem `query_url` in the first column,
 2. whether the `keywords` in the second column can represent the first column `query_url`, 
 3. whether you can find a better keyword combination to retrieve related issues to fix the problems `query_url` in the first column.
-
